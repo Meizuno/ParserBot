@@ -23,11 +23,11 @@ async def parse_anime() -> str:
         )
     }
 
-    for parsed_url in ParsedURL.all():
+    for parsed_url in ParsedURL.filter("anime"):
         response = requests.get(parsed_url.url, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, "lxml")
         result = soup.find_all("i", string=parsed_url.key)
-        items = [item.parent for item in result]
+        items = [item.parent for item in result if item.parent.name == "a"]
 
         for item in items:
             is_exists = ParsedItem.exists(base_url + item["href"], item.text)

@@ -15,6 +15,7 @@ class ParsedURL(SQLModel, table=True):
     url: str = Field(max_length=255)
     key: str = Field(max_length=255)
     is_active: bool = Field(default=True)
+    category: str = Field(max_length=255)
 
     def create(self) -> "ParsedURL":
         """Create new parsed url"""
@@ -27,11 +28,13 @@ class ParsedURL(SQLModel, table=True):
         return self
 
     @classmethod
-    def all(cls) -> list["ParsedURL"]:
-        """Get all parsed urls"""
+    def filter(cls, category: str) -> list["ParsedURL"]:
+        """Filter parsed urls"""
 
         with Session(engine) as session:
-            return session.exec(select(cls).where(cls.is_active)).all()
+            return session.exec(
+                select(cls).where(cls.is_active and cls.category == category)
+            ).all()
 
 
 class ParsedItem(SQLModel, table=True):
@@ -48,9 +51,12 @@ class ParsedItem(SQLModel, table=True):
         """Check if parsed item exists"""
 
         with Session(engine) as session:
-            return session.exec(
-                select(cls).where(cls.url == url and cls.result == result)
-            ).first() is not None
+            return (
+                session.exec(
+                    select(cls).where(cls.url == url and cls.result == result)
+                ).first()
+                is not None
+            )
 
     @classmethod
     def create(cls, url: str, result: str) -> "ParsedItem":
